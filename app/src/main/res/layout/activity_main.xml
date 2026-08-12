@@ -5,128 +5,150 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp"
-    android:background="#F5F7FA">
+    android:gravity="center_horizontal"
+    android:padding="28dp"
+    android:background="#141E38">
 
-    <!-- Logo -->
-    <TextView
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:text="DS"
-        android:textColor="#FFFFFF"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:background="@drawable/widget_background"
-        android:layout_marginBottom="16dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="DeepSeek 余额小部件"
-        android:textSize="18sp"
-        android:textColor="#1A1A2E"
-        android:textStyle="bold"
-        android:layout_marginBottom="24dp" />
-
-    <!-- 说明 -->
-    <TextView
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="设置 API Key 后，将小部件添加到桌面即可实时查看余额。"
-        android:textSize="13sp"
-        android:textColor="#6B7280"
-        android:gravity="center"
-        android:layout_marginBottom="24dp" />
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
-    <!-- API Key 输入 -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="API Key（以 sk- 开头）"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        app:boxCornerRadiusBottomEnd="12dp"
-        app:boxCornerRadiusBottomStart="12dp"
-        app:boxCornerRadiusTopEnd="12dp"
-        app:boxCornerRadiusTopStart="12dp">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_api_key"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPassword"
-            android:maxLines="1" />
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
 
-    </com.google.android.material.textfield.TextInputLayout>
+            <!-- Logo 区域 -->
+            <TextView
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:text="DS"
+                android:textColor="#FFFFFF"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/widget_background"
+                android:layout_marginBottom="20dp" />
 
-    <!-- 保存按钮 -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_save"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:text="保存"
-        android:layout_marginTop="16dp"
-        app:cornerRadius="12dp"
-        android:backgroundTint="#4A6CF7"
-        android:textColor="#FFFFFF" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DeepSeek 余额小部件"
+                android:textSize="20sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
 
-    <!-- 保存提示 -->
-    <TextView
-        android:id="@+id/tv_hint"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="12sp"
-        android:textColor="#10B981"
-        android:layout_marginTop="12dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="设置 API Key 后，将小部件添加到桌面即可实时查看余额。"
+                android:textSize="13sp"
+                android:textColor="#8899CC"
+                android:gravity="center"
+                android:layout_marginBottom="28dp" />
 
-    <!-- 删除按钮 -->
-    <TextView
-        android:id="@+id/tv_delete"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="删除密钥"
-        android:textSize="12sp"
-        android:textColor="#EF4444"
-        android:padding="8dp"
-        android:layout_marginTop="24dp" />
+            <!-- 当前余额预览 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="20dp"
+                android:background="@drawable/widget_background"
+                android:layout_marginBottom="24dp"
+                android:id="@+id/preview_section"
+                android:visibility="gone">
 
-    <!-- 当前余额预览 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:layout_marginTop="32dp"
-        android:id="@+id/preview_section"
-        android:visibility="gone">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="当前余额"
+                    android:textSize="11sp"
+                    android:textColor="#8899CC"
+                    android:alpha="0.7" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="当前余额"
-            android:textSize="12sp"
-            android:textColor="#6B7280" />
+                <TextView
+                    android:id="@+id/tv_preview_balance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--"
+                    android:textSize="38sp"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:layout_marginTop="4dp" />
 
-        <TextView
-            android:id="@+id/tv_preview_balance"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="--"
-            android:textSize="32sp"
-            android:textColor="#1A1A2E"
-            android:textStyle="bold"
-            android:layout_marginTop="4dp" />
+                <TextView
+                    android:id="@+id/tv_preview_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="12sp"
+                    android:layout_marginTop="6dp" />
 
-        <TextView
-            android:id="@+id/tv_preview_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="12sp"
-            android:layout_marginTop="4dp" />
+            </LinearLayout>
 
-    </LinearLayout>
+            <!-- API Key 输入 -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="API Key（以 sk- 开头）"
+                android:textColorHint="#6688AA"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="#3366AA">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_api_key"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:maxLines="1"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#556688" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- 保存按钮 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="保存"
+                android:textSize="16sp"
+                android:layout_marginTop="20dp"
+                app:cornerRadius="14dp"
+                android:backgroundTint="#4A6CF7"
+                android:textColor="#FFFFFF" />
+
+            <!-- 保存提示 -->
+            <TextView
+                android:id="@+id/tv_hint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="12sp"
+                android:textColor="#10B981"
+                android:layout_marginTop="14dp" />
+
+            <!-- 删除按钮 -->
+            <TextView
+                android:id="@+id/tv_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="删除已保存的密钥"
+                android:textSize="12sp"
+                android:textColor="#EF4444"
+                android:alpha="0.7"
+                android:padding="10dp"
+                android:layout_marginTop="16dp" />
+
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>
