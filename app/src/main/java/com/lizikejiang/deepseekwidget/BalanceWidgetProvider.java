@@ -1,15 +1,15 @@
 package com.lizikejiang.deepseekwidget;
 
+import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.widget.RemoteViews;
 
@@ -29,26 +29,30 @@ public class BalanceWidgetProvider extends AppWidgetProvider {
 
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private static final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private static final String ACTION_UPDATE = "com.lizikejiang.deepseekwidget.UPDATE_WIDGETS";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         updateWidgets(context, appWidgetManager, appWidgetIds);
+        schedulePeriodicUpdate(context);
     }
 
     @Override
     public void onEnabled(Context context) {
-        // 第一个小部件被添加时
+        schedulePeriodicUpdate(context);
     }
 
     @Override
     public void onDisabled(Context context) {
-        // 最后一个小部件被移除时
+        cancelPeriodicUpdate(context);
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-        if (AppWidgetManager.ACTION_APPWIDGET_UPDATE.equals(intent.getAction())) {
+        // 响应定时刷新或系统更新
+        if (ACTION_UPDATE.equals(intent.getAction()) ||
+            AppWidgetManager.ACTION_APPWIDGET_UPDATE.equals(intent.getAction())) {
             AppWidgetManager mgr = AppWidgetManager.getInstance(context);
             ComponentName name = new ComponentName(context, BalanceWidgetProvider.class);
             int[] ids = mgr.getAppWidgetIds(name);
@@ -58,29 +62,62 @@ public class BalanceWidgetProvider extends AppWidgetProvider {
         }
     }
 
+    // ── 定时刷新 (AlarmManager, 每5分钟) ──
+    private void schedulePeriodicUpdate(Context context) {
+        AlarmManager alarm = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, BalanceWidgetProvider.class);
+        intent.setAction(ACTION_UPDATE);
+        PendingIntent pending = PendingIntent.getBroadcast(
+                context, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        // 取消旧的
+        alarm.cancel(pending);
+
+        // 每5分钟触发
+        alarm.setInexactRepeating(
+                AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + 60000,  // 首次1分钟后
+                5 * 60 * 1000,                           // 间隔5分钟
+                pending
+        );
+    }
+
+    private void cancelPeriodicUpdate(Context context) {
+        AlarmManager alarm = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, BalanceWidgetProvider.class);
+        intent.setAction(ACTION_UPDATE);
+        PendingIntent pending = PendingIntent.getBroadcast(
+                context, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+        alarm.cancel(pending);
+    }
+
+    // ── 更新所有小部件 ──
     public static void updateWidgets(Context context, AppWidgetManager mgr, int[] ids) {
         String apiKey = MainActivity.getApiKey(context);
 
         if (TextUtils.isEmpty(apiKey)) {
             for (int id : ids) {
-                RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+                RemoteViews views = buildBaseViews(context);
                 views.setTextViewText(R.id.tv_balance, "设置");
-                views.setTextViewText(R.id.tv_currency, "点击输入 API Key");
+                views.setTextViewText(R.id.tv_currency, "DeepSeek 余额");
+                views.setTextViewText(R.id.tv_status, "点击输入 Key");
                 views.setTextViewText(R.id.tv_updated, "");
-                views.setOnClickPendingIntent(R.id.widget_root, getOpenAppIntent(context));
-
                 mgr.updateAppWidget(id, views);
             }
             return;
         }
 
-        // 先显示加载中
+        // 加载中
         for (int id : ids) {
-            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+            RemoteViews views = buildBaseViews(context);
             views.setTextViewText(R.id.tv_balance, "···");
-            views.setTextViewText(R.id.tv_currency, "加载中");
+            views.setTextViewText(R.id.tv_currency, "DeepSeek");
+            views.setTextViewText(R.id.tv_status, "加载中…");
             views.setTextViewText(R.id.tv_updated, "");
-            views.setOnClickPendingIntent(R.id.widget_root, getOpenAppIntent(context));
             mgr.updateAppWidget(id, views);
         }
 
@@ -89,23 +126,30 @@ public class BalanceWidgetProvider extends AppWidgetProvider {
             BalanceResult result = fetchBalance(apiKey);
             mainHandler.post(() -> {
                 for (int id : ids) {
-                    RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
-                    views.setOnClickPendingIntent(R.id.widget_root, getOpenAppIntent(context));
+                    RemoteViews views = buildBaseViews(context);
 
                     if (result.error != null) {
                         views.setTextViewText(R.id.tv_balance, "出错");
                         views.setTextViewText(R.id.tv_currency, result.error);
+                        views.setTextViewText(R.id.tv_status, "");
                         views.setTextViewText(R.id.tv_updated, "");
                     } else {
                         views.setTextViewText(R.id.tv_balance, result.balance);
-                        views.setTextViewText(R.id.tv_currency, result.currency + "  " + result.status);
-                        views.setTextViewText(R.id.tv_updated, "更新 " + result.updateTime);
+                        views.setTextViewText(R.id.tv_currency, result.currency);
+                        views.setTextViewText(R.id.tv_status, result.status);
+                        views.setTextViewText(R.id.tv_updated, result.updateTime);
                     }
 
                     mgr.updateAppWidget(id, views);
                 }
             });
         });
+    }
+
+    private static RemoteViews buildBaseViews(Context context) {
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+        views.setOnClickPendingIntent(R.id.widget_root, getOpenAppIntent(context));
+        return views;
     }
 
     private static PendingIntent getOpenAppIntent(Context context) {
@@ -117,6 +161,7 @@ public class BalanceWidgetProvider extends AppWidgetProvider {
         );
     }
 
+    // ── 网络请求 ──
     private static BalanceResult fetchBalance(String apiKey) {
         BalanceResult result = new BalanceResult();
         try {
@@ -143,7 +188,7 @@ public class BalanceWidgetProvider extends AppWidgetProvider {
                     JSONObject primary = infos.getJSONObject(0);
                     result.balance = formatBalance(primary.optString("total_balance", "0"));
                     result.currency = primary.optString("currency", "CNY");
-                    result.status = available ? "✓" : "余额不足";
+                    result.status = available ? "可用" : "余额不足";
                 } else {
                     result.balance = "0.00";
                     result.currency = "CNY";
