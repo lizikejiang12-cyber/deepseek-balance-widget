@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_bg">#FFFFFFFF</color>
+    <color name="widget_balance">#1A1A2E</color>
+    <color name="widget_subtitle">#6B7280</color>
+    <color name="primary">#4A6CF7</color>
+    <color name="primary_dark">#3B5DE7</color>
+    <color name="error">#EF4444</color>
+    <color name="success">#10B981</color>
+</resources>
